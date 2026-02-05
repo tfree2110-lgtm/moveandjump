@@ -18,9 +18,11 @@
         }
 
         #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+            position: fixed; /* CHANGED TO FIXED: Locks screen on mobile */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -30,6 +32,8 @@
         canvas {
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             background: transparent;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         /* UI LAYERS */
@@ -490,8 +494,8 @@ const player = new Player();
 // --- GAME LOOP & SYSTEM ---
 
 function resize() {
-    canvas.width = 800; // Internal resolution
-    canvas.height = 400;
+    canvas.width = 1200; // INCREASED FOR ZOOM OUT (Was 800)
+    canvas.height = 600; // INCREASED FOR ZOOM OUT (Was 400)
 }
 window.addEventListener('resize', resize);
 resize();
