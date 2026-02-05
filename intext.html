@@ -5,29 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stickman Parkour</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #222; overflow: hidden; font-family: 'Courier New', monospace; touch-action: none; user-select: none; -webkit-user-select: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(to bottom, #87CEEB, #E0F7FA); }
-        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); background: transparent; }
-        #ui-layer { position: absolute; top: 20px; left: 20px; color: #333; font-weight: bold; font-size: 24px; pointer-events: none; z-index: 20; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30; }
+        /* RESET & VIEWPORT LOCK */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #222;
+            overflow: hidden; /* No scrolling allowed */
+            touch-action: none; /* No zooming */
+        }
+
+        #game-container {
+            position: fixed; /* Locks to screen, ignores address bar scrolling */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+
+        canvas {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background: transparent;
+            max-width: 100%; /* Ensures it fits on small screens */
+            max-height: 100%;
+        }
+
+        /* UI ELEMENTS */
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 20px; 
+            pointer-events: none;
+            z-index: 20;
+            text-shadow: 1px 1px 0 #fff;
+        }
+
+        /* SCREENS (Start / Game Over) */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
         .hidden { display: none !important; }
-        h1 { color: #fff; font-size: 40px; margin-bottom: 10px; text-align: center; }
-        p { color: #ccc; font-size: 18px; text-align: center; }
-        button.start-btn { margin-top: 30px; padding: 15px 40px; font-size: 24px; background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        #controls { position: absolute; bottom: 20px; width: 100%; height: 120px; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 25; }
-        .btn { width: 80px; height: 80px; background: rgba(255, 255, 255, 0.3); border: 2px solid rgba(255, 255, 255, 0.6); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; backdrop-filter: blur(5px); }
-        .jump-btn { background: rgba(255, 71, 87, 0.4); border-color: #ff4757; }
+
+        h1 { color: #fff; font-family: 'Courier New', monospace; font-size: 32px; text-align: center; margin: 0 0 20px 0; }
+        p { color: #ccc; font-family: 'Courier New', monospace; font-size: 16px; text-align: center; margin-bottom: 30px; }
+
+        button.start-btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px #c0392b;
+        }
+        button.start-btn:active { transform: translateY(4px); box-shadow: 0 0 #c0392b; }
+
+        /* CONTROLS - Fixed to bottom of view */
+        #controls {
+            position: absolute;
+            bottom: 30px; /* Pushed up slightly to clear iPhone home bar */
+            left: 0;
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 25;
+            pointer-events: auto;
+        }
+
+        .btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: white;
+            user-select: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .jump-btn {
+            background: rgba(255, 71, 87, 0.5);
+            border-color: #ff4757;
+        }
+
         .btn:active { background: rgba(255, 255, 255, 0.6); }
     </style>
 </head>
 <body>
+
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
-    <div id="ui-layer">LIVES: <span id="lives">❤️❤️❤️❤️❤️</span> | LVL: <span id="lvl">1</span></div>
+    
+    <div id="ui-layer">
+        LIVES: <span id="lives">❤️❤️❤️❤️❤️</span><br>
+        LVL: <span id="lvl">1</span>
+    </div>
     
     <div id="start-screen" class="screen">
         <h1>Stick Parkour</h1>
-        <p>Use arrows to move. Jump to survive.</p>
+        <p>Avoid spikes. Reach the green zone.</p>
         <button class="start-btn" onclick="startGame()">START GAME</button>
     </div>
 
@@ -37,7 +142,7 @@
     </div>
 
     <div id="controls">
-        <div style="display:flex; gap:15px">
+        <div style="display:flex; gap:20px">
             <div class="btn" id="btn-left">←</div>
             <div class="btn" id="btn-right">→</div>
         </div>
@@ -50,9 +155,14 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// Resize
-function resize() { canvas.width = 800; canvas.height = 400; }
-window.addEventListener('resize', resize); resize();
+// FORCE RESIZE to fit mobile screens perfectly
+function resize() { 
+    // We render at 800x400 internally, but CSS scales it to fit the phone
+    canvas.width = 800; 
+    canvas.height = 400; 
+}
+window.addEventListener('resize', resize); 
+resize();
 
 // Config
 const GRAVITY = 0.6, SPEED = 5, JUMP = -12;
@@ -82,14 +192,24 @@ function playTone(type) {
     osc.start(t);
 }
 
-// Input
+// Key Input (for PC testing)
 window.onkeydown = e => { if(e.code=='ArrowRight') keys.r=true; if(e.code=='ArrowLeft') keys.l=true; if(e.code=='ArrowUp'||e.code=='Space') {keys.u=true; if(!state.run)return; if(player.ground) {player.vy=JUMP; player.ground=false; playTone('j');}} };
 window.onkeyup = e => { if(e.code=='ArrowRight') keys.r=false; if(e.code=='ArrowLeft') keys.l=false; if(e.code=='ArrowUp'||e.code=='Space') keys.u=false; };
 
+// Touch Input (Fixed for Mobile)
 const bind = (id, k) => {
     const b = document.getElementById(id);
-    b.ontouchstart = b.onmousedown = e => { e.preventDefault(); keys[k]=true; if(k=='u' && player.ground) {player.vy=JUMP; player.ground=false; playTone('j');} };
-    b.ontouchend = b.onmouseup = e => { e.preventDefault(); keys[k]=false; };
+    b.ontouchstart = b.onmousedown = e => { 
+        e.preventDefault(); // Prevents double-firing on some phones
+        keys[k]=true; 
+        if(k=='u' && player.ground) { player.vy=JUMP; player.ground=false; playTone('j'); }
+        b.style.transform = "scale(0.9)";
+    };
+    b.ontouchend = b.onmouseup = b.onmouseleave = e => { 
+        e.preventDefault(); 
+        keys[k]=false; 
+        b.style.transform = "scale(1)";
+    };
 };
 bind('btn-left','l'); bind('btn-right','r'); bind('btn-jump','u');
 
